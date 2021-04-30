@@ -52,13 +52,11 @@ import { inIframe } from '@/utils/iframe';
 import { PartialBy } from '@/types';
 
 // Only show the option to connect to a Gnosis Safe if we're in an iframe
-const filteredConnectors: PartialBy<
-  typeof connectorsList,
-  'gnosis'
-> = connectorsList;
-if (!inIframe()) {
-  delete filteredConnectors.gnosis;
-}
+const filteredConnectors = Object.fromEntries(
+  Object.entries(connectorsList).filter(
+    ([key]) => key !== 'gnosis' || inIframe()
+  )
+) as PartialBy<typeof connectorsList, 'gnosis'>;
 
 export default defineComponent({
   props: {

@@ -1,5 +1,7 @@
+import SafeAppsSDK from '@gnosis.pm/safe-apps-sdk/dist/src/sdk';
 import { getInstance } from '@snapshot-labs/lock/plugins/vue3';
 import { lsGet, lsSet } from '@/utils';
+import { inIframe } from '@/utils/iframe';
 import i18n from '@/plugins/i18n';
 import { LiquiditySelection } from '@/utils/balancer/helpers/sor/sorManager';
 
@@ -22,6 +24,18 @@ const state: AppState = {
   tradeLiquidity: LiquiditySelection.Best
 };
 
+/**
+ * @dev Checks whether we can connect to a parent window using the Gnosis SDK
+ * Check if we're in an iframe before trying to connect as Safe App to speed up standard init
+ *
+ */
+const isGnosisSafeApp = async (): Promise<boolean> =>
+  inIframe() &&
+  Promise.race([
+    new SafeAppsSDK().getSafeInfo().then(() => true),
+    new Promise<boolean>(resolve => setTimeout(resolve, 500)).then(() => false)
+  ]);
+
 const actions = {
   init: async ({ commit, dispatch }) => {
     try {
@@ -34,9 +48,15 @@ const actions = {
       dispatch('trade/init', null, { root: true });
 
       // Setup web3
-      const auth = getInstance();
-      const connector = await auth.getConnector();
-      if (connector) dispatch('web3/login', connector, { root: true });
+      if (await isGnosisSafeApp()) {
+        dispatch('web3/login', 'gnosis', { root: true });
+      } else {
+        const auth = getInstance();
+        const connector = await auth.getConnector();
+        if (connector && connector !== 'gnosis') {
+          dispatch('web3/login', connector, { root: true });
+        }
+      }
 
       commit('setLocale', 'en-US');
       commit('setDarkMode', false);
