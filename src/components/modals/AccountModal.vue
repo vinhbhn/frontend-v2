@@ -48,7 +48,7 @@ import { getInjected } from '@snapshot-labs/lock/src/utils';
 import connectorsList from '@/constants/connectors.json';
 import { useStore } from 'vuex';
 import { useI18n } from 'vue-i18n';
-import { inIframe } from '@/utils/iframe';
+import { inIframe } from '@/utils/gnosis';
 import { PartialBy } from '@/types';
 
 // Only show the option to connect to a Gnosis Safe if we're in an iframe
